@@ -5,6 +5,7 @@
     <title>Hello World</title>
     </head>
     <script src="Scripts/pixi.min.js"></script>
+    <script src="node_modules/howler/src/howler.core.js"></script>
     <body>
         <script type="text/javascript">
             let type = "WebGL"
@@ -23,6 +24,14 @@
 
             //Add the canvas that Pixi automatically created for you to the HTML document
             document.body.appendChild(app.view);
+
+            const sound = new Howl({
+                src: ["Assets/sounds/Start_Button.mp3"],
+                autoplay: true,
+                loop: true,
+            });
+
+            sound.play();
         </script>
     </body>
 </html>
