@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Hello World</title>
     </head>
-    <script src="Scripts/pixi.min.js"></script>
+    <script src="Scripts/pixi/pixi.min.js"></script>
     <script src="node_modules/howler/src/howler.core.js"></script>
     <body>
         <script type="text/javascript">
@@ -13,25 +13,144 @@
             type = "canvas"
             }
 
-            PIXI.utils.sayHello(type)
-
-            //Create a Pixi Application
-            let app = new PIXI.Application({
-                width: 256, 
-                height: 256,
-                resizeTo: window
-            });
-
-            //Add the canvas that Pixi automatically created for you to the HTML document
-            document.body.appendChild(app.view);
-
             const sound = new Howl({
                 src: ["Assets/sounds/Start_Button.mp3"],
                 autoplay: true,
-                loop: true,
+                loop: false,
             });
 
-            sound.play();
+            const app = new PIXI.Application({ backgroundColor: 0x1099bb });
+            document.body.appendChild(app.view);
+
+            app.loader
+                .add('symbol_1', 'Assets/images/symbols/symbol_1.png')
+                .add('symbol_2', 'Assets/images/symbols/symbol_2.png')
+                .add('symbol_3', 'Assets/images/symbols/symbol_3.png')
+                .add('symbol_4', 'Assets/images/symbols/symbol_4.png')
+                .add('symbol_5', 'Assets/images/symbols/symbol_5.png')
+                .add('symbol_6', 'Assets/images/symbols/symbol_6.png')
+                .add('Assets/images/symbols/symbol_7', 'Assets/images/symbols/symbol_7.png')
+                .add('symbol_8', 'Assets/images/symbols/symbol_8.png')
+                .add('btn_spin_disabled', 'Assets/images/ui/btn_spin_disabled.png')
+                .add('btn_spin_hover', 'Assets/images/ui/btn_spin_hover.png')
+                .add('btn_spin_normal', 'Assets/images/ui/btn_spin_normal.png')
+                .add('btn_spin_pressed', 'Assets/images/ui/btn_spin_pressed.png')
+                .load(onAssetsLoaded);
+
+            const REEL_WIDTH = 160;
+            const SYMBOL_SIZE = 150;
+
+            // onAssetsLoaded handler builds the example.
+            function onAssetsLoaded() {
+                // Create different slot symbols.
+                const slotTextures = [
+                    PIXI.Texture.from('Assets/images/symbols/symbol_1.png'),
+                    PIXI.Texture.from('Assets/images/symbols/symbol_2.png'),
+                    PIXI.Texture.from('Assets/images/symbols/symbol_3.png'),
+                    PIXI.Texture.from('Assets/images/symbols/symbol_4.png'),
+                    PIXI.Texture.from('Assets/images/symbols/symbol_5.png'),
+                    PIXI.Texture.from('Assets/images/symbols/symbol_6.png'),
+                    PIXI.Texture.from('Assets/images/symbols/symbol_7.png'),
+                    PIXI.Texture.from('Assets/images/symbols/symbol_8.png')
+                ];
+
+                // Build the row
+                const reels = [];
+                const reelContainer = new PIXI.Container();
+                for (let i = 0; i < 5; i++) {
+                    const rc = new PIXI.Container();
+                    rc.x = i * REEL_WIDTH;
+                    reelContainer.addChild(rc);
+
+                    const reel = {
+                        container: rc,
+                        symbols: [],
+                        position: 0,
+                        previousPosition: 0,
+                    };
+
+                    // Build the symbols
+                    for (let j = 0; j < 4; j++) {
+                        // let j = 2;
+                        const symbol = new PIXI.Sprite(slotTextures[Math.floor(Math.random() * slotTextures.length)]);
+                        // Scale the symbol to fit symbol area.
+                        symbol.y = j * SYMBOL_SIZE;
+                        symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.width, SYMBOL_SIZE / symbol.height);
+                        symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
+                        reel.symbols.push(symbol);
+                        rc.addChild(symbol);
+                    }
+                    reels.push(reel);
+                }
+                app.stage.addChild(reelContainer);
+
+                // Build top & bottom covers and position reelContainer
+                const margin = (app.screen.height - SYMBOL_SIZE * 3) / 4;
+                reelContainer.y = margin * 1 + 3;
+                reelContainer.x = Math.round(app.screen.width - REEL_WIDTH * 4.97);
+
+                const top = new PIXI.Graphics();
+                top.beginFill(0, 1);
+                top.drawRect(0, 0, app.screen.width, margin);
+                
+                const bottom = new PIXI.Graphics();
+                bottom.beginFill(0, 1);
+                bottom.drawRect(0, SYMBOL_SIZE * 3 + margin, app.screen.width, margin*3.);
+
+                // Add play button texture
+
+                const textureButtonNormal = PIXI.Texture.from('Assets/images/ui/btn_spin_normal.png');
+                const textureButtonHover = PIXI.Texture.from('Assets/images/ui/btn_spin_hover.png');
+                const textureButtonPressed = PIXI.Texture.from('Assets/images/ui/btn_spin_pressed.png');
+                const textureButtonDisabled = PIXI.Texture.from('Assets/images/ui/btn_spin_disabled.png');
+
+                const button = new PIXI.Sprite(textureButtonNormal);
+
+                button.width = 100;
+                button.height = 100;
+                button.x = 350;
+                button.y = 500;
+
+                button.interactive = true;
+                button.buttonMode = true;
+
+                button
+                // Mouse events
+                    .on('mousedown', onButtonDown)
+                    // .on('mouseup', onButtonUp)
+                    // .on('mouseupoutside', onButtonUp)
+                    .on('mouseover', onButtonOver)
+                    .on('mouseout', onButtonOut)
+
+                app.stage.addChild(top);
+                app.stage.addChild(bottom);
+                app.stage.addChild(button);
+
+                button.addListener('pointerdown', () => {
+                    startPlay();
+                    sound.play();
+                });
+
+                // Set the interactivity.
+
+                function onButtonOut() {
+                    this.isOut = true;
+                    this.texture = textureButtonNormal;
+                }
+                
+                function onButtonOver() {
+                    this.isOver = true;
+                    if (this.isdown) {
+                        return;
+                    }
+                    this.texture = textureButtonHover;
+                }
+
+                function onButtonDown() {
+                    this.texture = textureButtonPressed;
+                    this.isdown = true;
+                }
+            }
         </script>
     </body>
 </html>
