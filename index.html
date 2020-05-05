@@ -269,7 +269,7 @@
                     for(let i = 0; i < 5.; i ++){
                         for(let t = 0; t < 3.; t++){
                             // rows[t].position.y += 100. * delta;
-                            rows[i].symbols[t].position.y += 2. * delta;
+                            rows[i].symbols[t].position.y += 7. * delta;
                             if(rows[i].symbols[t].position.y > (320. - SYMBOL_SIZE * t)) {
                                 rows[i].symbols[t].position.y = 320. - SYMBOL_SIZE * t;
                                 switch (i) {
@@ -375,29 +375,27 @@
                     }} else if (button.isdown == true && areSymbolsSpawned){
                         for(let i = 0; i < 5.; i ++){
                             for(let t = 0; t < 3.; t++){
-                                rows[i].symbols[t].position.y += 2. * delta;
-                                if(rows[i].symbols[t].position.y > (920. - SYMBOL_SIZE * t)) {
-                                    rows[i].symbols[0].position.y = -250;
-                                    rows[i].symbols[1].position.y = -250 -2*150;
-                                    rows[i].symbols[2].position.y = -250 -3*150;
+                                rows[i].symbols[t].position.y += 7. * delta;
+                                if(rows[i].symbols[t].position.y > (900. - SYMBOL_SIZE * t)) {
+                                    rows[i].symbols[0].position.y = -300;
+                                    rows[i].symbols[1].position.y = -300 -2*150;
+                                    rows[i].symbols[2].position.y = -300 -3*150;
 
-                                    rows[i].symbols[t].texture = new PIXI.Sprite(slotTextures[Math.floor(Math.random() * slotTextures.length)]);
-
-                                    rows[i].symbols[1].position.y -= DIST_BTW_ROWS_SPAWNED;
-                                    rows[i].symbols[2].position.y -= 2 * DIST_BTW_ROWS_SPAWNED;
+                                    rows[i].symbols[1].position.y -= 0.2 * DIST_BTW_ROWS_SPAWNED;
+                                    rows[i].symbols[2].position.y -= 1.5 * DIST_BTW_ROWS_SPAWNED;
                     
                                     for(let y = 0; y < 3; y++){
                                         rows[i].symbols[y].position.y += DIST_BTW_SYMBOLS_SPAWNED * i;
                                     }
 
-                                    playStatus = Object.assign(playStatus, playStatus1);
+                                    Object.assign(playStatus,playStatus1);
+                                    // playStatus = copy;
                      
                                     button.isdown = false;
                                     areSymbolsSpawned = false;
                                 }
                             }
                         }
-                        // onAssetsLoaded();
                     }
                 });
             }
