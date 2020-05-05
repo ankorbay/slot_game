@@ -6,30 +6,18 @@
     </head>
     <script src="Scripts/pixi/pixi.min.js"></script>
     <script src="node_modules/howler/src/howler.core.js"></script>
+    <script src="node_modules/pixi-timeout/index.js"></script>
     <body>
         <script type="text/javascript">
+        
             let type = "WebGL"
             if(!PIXI.utils.isWebGLSupported()){
             type = "canvas"
             }
 
-            let playStatus1 = {
-                1: [false,false,false],
-                2: [false,false,false],
-                3: [false,false,false],
-                4: [false,false,false],
-                5: [false,false,false],
-            };
+            let isSymbolsSpawned = false;
 
-            let playStatus = {
-                1: [false,false,false],
-                2: [false,false,false],
-                3: [false,false,false],
-                4: [false,false,false],
-                5: [false,false,false],
-            };
-
-            let areSymbolsSpawned = false;
+            let i = 14;
 
             const sound = new Howl({
                 src: ["Assets/sounds/Start_Button.mp3"],
@@ -70,6 +58,24 @@
             const app = new PIXI.Application({ backgroundColor: 0x1099bb });
             document.body.appendChild(app.view);
 
+            const data = {
+                1: [0,0],
+                2: [0,0],
+                3: [0,0],
+                4: [0,0],
+                5: [0,0],
+                6: [0,0],
+                7: [0,0],
+                8: [0,0],
+                9: [0,0],
+                10: [0,0],
+                11: [0,0],
+                12: [0,0],
+                13: [0,0],
+                14: [0,0],
+                15: [0,0]
+            };
+
             app.loader
                 .add('symbol_1', 'Assets/images/symbols/symbol_1.png')
                 .add('symbol_2', 'Assets/images/symbols/symbol_2.png')
@@ -77,7 +83,7 @@
                 .add('symbol_4', 'Assets/images/symbols/symbol_4.png')
                 .add('symbol_5', 'Assets/images/symbols/symbol_5.png')
                 .add('symbol_6', 'Assets/images/symbols/symbol_6.png')
-                .add('Assets/images/symbols/symbol_7', 'Assets/images/symbols/symbol_7.png')
+                .add('symbol_7', 'Assets/images/symbols/symbol_7.png')
                 .add('symbol_8', 'Assets/images/symbols/symbol_8.png')
                 .add('btn_spin_disabled', 'Assets/images/ui/btn_spin_disabled.png')
                 .add('btn_spin_hover', 'Assets/images/ui/btn_spin_hover.png')
@@ -91,9 +97,14 @@
             const DIST_BTW_SYMBOLS_SPAWNED = 30.;
             const DIST_BTW_ROWS_SPAWNED = 120.;
 
-            function createRandomTextures(){
-                            // Create different slot symbols.
-                            const slotTextures = [
+            function randomInt(min, max){
+                return Math.round(min - 0.5 + Math.random() * (max - min + 1));
+            };
+
+            const symbolsSpawned = [];
+            const symbols = [];
+
+            const slotTextures = [
                     PIXI.Texture.from('Assets/images/symbols/symbol_1.png'),
                     PIXI.Texture.from('Assets/images/symbols/symbol_2.png'),
                     PIXI.Texture.from('Assets/images/symbols/symbol_3.png'),
@@ -104,105 +115,31 @@
                     PIXI.Texture.from('Assets/images/symbols/symbol_8.png')
                 ];
 
-                // Build the row
-                const rows = [];
-                let reelContainer = new PIXI.Container();
-                for (let i = 0; i < 5; i++) {
-                    const rc = new PIXI.Container();
-                    rc.x = i * REEL_WIDTH;
-                    // rc.y += 100 * i;
-                    reelContainer.addChild(rc);
+            symbols.push(symbol1,symbol2,symbol3,symbol4,symbol5,symbol6,symbol7,symbol8);
 
-                    const row = {
-                        container: rc,
-                        symbols: [],
-                        position: 0,
-                        previousPosition: 0,
-                    };
+            function spawnSymbol(posx,posy){
+                let i = randomInt(0,7);
 
-                    // Build the symbols
-                    for (let j = 0; j < 5; j++) {
-                        
-                        for (let i = 0; i < 3; i++) {
+                const symbol = new PIXI.Sprite(slotTextures[Math.floor(Math.random() * slotTextures.length)]);
 
-                        const symbol = new PIXI.Sprite(slotTextures[Math.floor(Math.random() * slotTextures.length)]);
-                        // Scale the symbol to fit symbol areae.
-                        symbol.x = j * SYMBOL_SIZE;
-                        symbol.y =  - i * SYMBOL_SIZE - 300;
-                        symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.width, SYMBOL_SIZE / symbol.height);
-                        symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
-                        row.symbols.push(symbol);
-                        rc.addChild(symbol);
-                        // app.stage.addChild(symbol);
-                        }
-                    }
-                    rows.push(row);
-                    
-                }
-                app.stage.addChild(reelContainer);
+                symbol.scale.x = symbol.scale.y = 0.7;
+                symbol.x = posx;
+                symbol.y = posy;
 
-                // Build top & bottom covers and position reelContainer
-                // const margin = (app.screen.height - SYMBOL_SIZE * 3) / 4;
-                // reelContainer.y = margin * 1 + 3;
-                reelContainer.x = Math.round(app.screen.width - REEL_WIDTH * 4.97);
+                symbolsSpawned.push(symbol);
+
+                app.stage.addChild(symbol);
             }
 
             function onAssetsLoaded() {
-                // Create different slot symbols.
-                const slotTextures = [
-                    PIXI.Texture.from('Assets/images/symbols/symbol_1.png'),
-                    PIXI.Texture.from('Assets/images/symbols/symbol_2.png'),
-                    PIXI.Texture.from('Assets/images/symbols/symbol_3.png'),
-                    PIXI.Texture.from('Assets/images/symbols/symbol_4.png'),
-                    PIXI.Texture.from('Assets/images/symbols/symbol_5.png'),
-                    PIXI.Texture.from('Assets/images/symbols/symbol_6.png'),
-                    PIXI.Texture.from('Assets/images/symbols/symbol_7.png'),
-                    PIXI.Texture.from('Assets/images/symbols/symbol_8.png')
-                ];
-
-                // Build the row
-                const rows = [];
-                let reelContainer = new PIXI.Container();
-                for (let i = 0; i < 5; i++) {
-                    const rc = new PIXI.Container();
-                    rc.x = i * REEL_WIDTH;
-                    // rc.y += 100 * i;
-                    reelContainer.addChild(rc);
-
-                    const row = {
-                        container: rc,
-                        symbols: [],
-                        position: 0,
-                        previousPosition: 0,
-                    };
-
-                    // Build the symbols
-                    for (let j = 0; j < 5; j++) {
-                        
-                        for (let i = 0; i < 3; i++) {
-
-                        const symbol = new PIXI.Sprite(slotTextures[Math.floor(Math.random() * slotTextures.length)]);
-                        // Scale the symbol to fit symbol areae.
-                        symbol.x = j * SYMBOL_SIZE;
-                        symbol.y =  - i * SYMBOL_SIZE - 300;
-                        symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.width, SYMBOL_SIZE / symbol.height);
-                        symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
-                        row.symbols.push(symbol);
-                        rc.addChild(symbol);
-                        // app.stage.addChild(symbol);
-                        }
+     
+                for (let x = 0; x < 5; x++){
+                    for (let y = 0; y < 3; y++){
+                        let posx = x * 160;
+                        let posy = 10 + y * 160;
+                        spawnSymbol(posx,posy);
                     }
-                    rows.push(row);
-                    
                 }
-                app.stage.addChild(reelContainer);
-
-                // Build top & bottom covers and position reelContainer
-                // const margin = (app.screen.height - SYMBOL_SIZE * 3) / 4;
-                // reelContainer.y = margin * 1 + 3;
-                reelContainer.x = Math.round(app.screen.width - REEL_WIDTH * 4.97);
-
-                // Add play button texture
 
                 const textureButtonNormal = PIXI.Texture.from('Assets/images/ui/btn_spin_normal.png');
                 const textureButtonHover = PIXI.Texture.from('Assets/images/ui/btn_spin_hover.png');
@@ -220,10 +157,7 @@
                 button.buttonMode = true;
 
                 button
-                // Mouse events
                     .on('mousedown', onButtonDown)
-                    // .on('mouseup', onButtonUp)
-                    // .on('mouseupoutside', onButtonUp)
                     .on('mouseover', onButtonOver)
                     .on('mouseout', onButtonOut)
 
@@ -231,9 +165,27 @@
 
                 button.addListener('pointerdown', () => {
                     sound.play();
+                    if(isSymbolsSpawned){
+                        animate2();
+                    } else {
+                        animate1();
+                    }
                 });
+                
+                
+                function animate1(){
+                    if (i == -1) i = 14;
+                    symbolsSpawned[i].position.y += 5.;
+                    
+                    
+                    
+                    // PIXI.setTimeout(0.01,animate1);
+                    requestAnimationFrame(animate1);
+                }
 
-                // Set the interactivity.
+                function animate2(){
+                    
+                }
 
                 function onButtonOut() {
                     this.isOut = true;
@@ -254,151 +206,8 @@
                     this.isdown = true;
                 }
 
-                for(let i = 0; i < 5.; i ++){
-                    rows[i].symbols[1].position.y -= DIST_BTW_ROWS_SPAWNED;
-                    rows[i].symbols[2].position.y -= 2 * DIST_BTW_ROWS_SPAWNED;
-
-                        rows[i].position.y += DIST_BTW_SYMBOLS_SPAWNED * i; 
-                        for(let y = 0; y < 3; y++){
-                            rows[i].symbols[y].position.y += DIST_BTW_SYMBOLS_SPAWNED * i;
-                        }
-                    }
-
                 app.ticker.add((delta) => {
-                    if(button.isdown == true && !areSymbolsSpawned){
-                    for(let i = 0; i < 5.; i ++){
-                        for(let t = 0; t < 3.; t++){
-                            // rows[t].position.y += 100. * delta;
-                            rows[i].symbols[t].position.y += 2. * delta;
-                            if(rows[i].symbols[t].position.y > (320. - SYMBOL_SIZE * t)) {
-                                rows[i].symbols[t].position.y = 320. - SYMBOL_SIZE * t;
-                                switch (i) {
-                                case 4:
-                                    switch (t) {
-                                        case 0:
-                                            if(!playStatus[1][t]) reel1.play();
-                                            playStatus[1][t]=true;
-                                            break;
-                                        case 1:
-                                            if(!playStatus[1][t]) reel1.play();
-                                            playStatus[1][t]=true;
-                                            break;
-                                        case 2:
-                                            if(!playStatus[1][t]) reel1.play();
-                                            playStatus[1][t]=true;
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                    
-                                    break;
-                                case 3:
-                                    switch (t) {
-                                        case 0:
-                                            if(!playStatus[2][t]) reel2.play();
-                                            playStatus[2][t]=true;
-                                            break;
-                                        case 1:
-                                            if(!playStatus[2][t]) reel2.play();
-                                            playStatus[2][t]=true;
-                                            break;
-                                        case 2:
-                                            if(!playStatus[2][t]) reel2.play();
-                                            playStatus[2][t]=true;
-                                            break;
-                                        default:
-                                            break;
-                                    }
-
-                                    break;
-                                case 2:
-                                    switch (t) {
-                                        case 0:
-                                            if(!playStatus[3][t]) reel3.play();
-                                            playStatus[3][t]=true;
-                                            break;
-                                        case 1:
-                                            if(!playStatus[3][t]) reel3.play();
-                                            playStatus[3][t]=true;
-                                            break;
-                                        case 2:
-                                            if(!playStatus[3][t]) reel3.play();
-                                            playStatus[3][t]=true;
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                    break;
-                                case 1:
-                                    switch (t) {
-                                        case 0:
-                                            if(!playStatus[4][t]) reel4.play();
-                                            playStatus[4][t]=true;
-                                            break;
-                                        case 1:
-                                            if(!playStatus[4][t]) reel4.play();
-                                            playStatus[4][t]=true;
-                                            break;
-                                        case 2:
-                                            if(!playStatus[4][t]) reel4.play();
-                                            playStatus[4][t]=true;
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                    break;
-                                case 0:
-                                    switch (t) {
-                                        case 0:
-                                            if(!playStatus[5][t]) reel5.play();
-                                            playStatus[5][t]=true;
-                                            break;
-                                        case 1:
-                                            if(!playStatus[5][t]) reel5.play();
-                                            playStatus[5][t]=true;
-                                            break;
-                                        case 2:
-                                            if(!playStatus[5][t]) reel5.play();
-                                            playStatus[5][t]=true;
-                                            areSymbolsSpawned = true;
-                                            button.isdown = false;
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                default:
-                                    break;
-                            }
-                            }
-                            
-                        }
-                    }} else if (button.isdown == true && areSymbolsSpawned){
-                        for(let i = 0; i < 5.; i ++){
-                            for(let t = 0; t < 3.; t++){
-                                rows[i].symbols[t].position.y += 2. * delta;
-                                if(rows[i].symbols[t].position.y > (920. - SYMBOL_SIZE * t)) {
-                                    rows[i].symbols[0].position.y = -250;
-                                    rows[i].symbols[1].position.y = -250 -2*150;
-                                    rows[i].symbols[2].position.y = -250 -3*150;
-
-                                    rows[i].symbols[t].texture = new PIXI.Sprite(slotTextures[Math.floor(Math.random() * slotTextures.length)]);
-
-                                    rows[i].symbols[1].position.y -= DIST_BTW_ROWS_SPAWNED;
-                                    rows[i].symbols[2].position.y -= 2 * DIST_BTW_ROWS_SPAWNED;
                     
-                                    for(let y = 0; y < 3; y++){
-                                        rows[i].symbols[y].position.y += DIST_BTW_SYMBOLS_SPAWNED * i;
-                                    }
-
-                                    playStatus = Object.assign(playStatus, playStatus1);
-                     
-                                    button.isdown = false;
-                                    areSymbolsSpawned = false;
-                                }
-                            }
-                        }
-                        // onAssetsLoaded();
-                    }
                 });
             }
         </script>

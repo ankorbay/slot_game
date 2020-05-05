@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/ankorbay/slot_game#readme",
   "dependencies": {
-    "howler": "^2.1.3"
+    "howler": "^2.1.3",
+    "pixi-timeout": "^1.0.4"
   }
 }
